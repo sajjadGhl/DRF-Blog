@@ -2,7 +2,7 @@ from contactUs.models import ContactUs
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .serializers import ContactUsSerializer
-from authentication.permissions import IsAdmin, IsUser, IsAdminOrIsAuthor
+from authentication.permissions import IsAdmin, IsAuthor, IsUser
 
 
 # Contact Us ViewSet
@@ -30,6 +30,6 @@ class ContactUsViewSet(viewsets.ModelViewSet):
         if self.action in ['create']:
             permission_classes = []
         else:
-            permission_classes = [IsAdminOrIsAuthor]  # IsAdmin|IsAuthor
+            permission_classes = [IsAdmin | IsAuthor]
         return [permission() for permission in permission_classes]
 

@@ -2,32 +2,30 @@ from posts.models import Post
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .serializers import PostSerializer
-from authentication.permissions import IsAdmin, IsAuthor, IsUser, IsAdminOrIsAuthor
+from authentication.permissions import IsAdmin, IsAuthor, IsUser, IsOwner
 from blog.pagination import CustomPagination
+from django.utils import timezone
+from django.db.models import Q
 
-
-# TODO :: Comments -> Delete this item for now, make it for v2
-
-# USER API TESTED SUCCESSFULLY
-# POST API TESTED SUCCESSFULLY
-#
 
 # Post ViewSet
 class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
 
-    queryset = Post.objects.all()
+    queryset = Post.objects.exclude(created_at__gt=timezone.now())
+    # queryset = Post.objects.all()
 
     pagination_class = CustomPagination
 
     def list(self, request):
         search = self.request.query_params.get('search')
+
         if search is not None:
-            queryset = self.filter_queryset(self.queryset.filter(title__icontains=search, content__icontains=search))
-            page = self.paginate_queryset(queryset)
-        else:
-            queryset = Post.objects.all()
-            page = self.paginate_queryset(queryset)
+            self.queryset = self.filter_queryset(
+                self.queryset.filter(Q(title__icontains=search) | Q(content__icontains=search))
+            )
+
+        page = self.paginate_queryset(self.queryset)
 
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
@@ -42,7 +40,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         try:
-            instance = Post.objects.get(pk=pk)
+            instance = Post.objects.get(pk=pk, created_at__lte=timezone.now())
         except Post.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -78,5 +76,5 @@ class PostViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             permission_classes = []
         else:
-            permission_classes = [IsAdminOrIsAuthor]  # IsAdmin|IsAuthor
+            permission_classes = [IsAdmin | (IsAuthor & IsOwner)]
         return [permission() for permission in permission_classes]
