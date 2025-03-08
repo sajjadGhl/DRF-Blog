@@ -24,7 +24,7 @@ SECRET_KEY = 'django-insecure-+d&_h19vqmipbju$es6j0od+d!_f@!z7)a^a$*crrw)ss38pds
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['drf-blog-blush.vercel.app/', '.sajjadghl.ir']
 
 # Application definition
 
